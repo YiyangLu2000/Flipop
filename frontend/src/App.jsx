@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import React from "react";
 import './App.css'
+import Header from "./Header";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <div>
-        <h1>Welcome to My React App</h1>
+      <Header />
+      <div className="app container-fluid d-flex flex-column justify-content-center align-items-center pt-5">
+        <h1>What do you want to read today?</h1>
+        <p>Tap to start and select the keywords you’re interested in</p>
       </div>
     </>
   )
