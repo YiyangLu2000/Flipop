@@ -1,16 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import "./Header.css";
 
-function Header() {
+function Header({ onLoginClick }) {
   return (
     <header className="header d-flex justify-content-between align-items-center mt-3 mx-3">
       <div className="left">
-        <Link to="/">Flipop</Link>
+        <a href="/">Flipop</a>
       </div>
       <div className="right d-flex gap-3">
-        <Link to="/">Home</Link>
-        <Link to="/login">Log In</Link>
+        <a href="/">Home</a>
+        <a onClick={onLoginClick}>
+          Sign In/Up
+        </a>
       </div>
     </header>
   );
