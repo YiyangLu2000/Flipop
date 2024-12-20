@@ -1,3 +1,7 @@
 .min-vh-80 {
     min-height: 80vh;
 }
+
+.modal-background {
+    background-color: rgba(255, 255, 255, 0.8);
+}

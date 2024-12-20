@@ -11,7 +11,6 @@ function App() {
     setShowLogin(!showLogin);
   };
 
-
   return (
     <>
       <Header onLoginClick={toggleLoginPopup} />
@@ -24,27 +23,7 @@ function App() {
       <hr className="border border-secondary" />
       <Footer />
       {showLogin && (
-        <div className="modal-backdrop fade show">
-          <div className="modal modal-lg d-block" tabIndex="-1" role="dialog" aria-hidden="true">
-            <div className="modal-dialog modal-dialog-centered" role="document">
-              <div className="modal-content">
-                <div className="d-flex justify-content-end">
-                  <button
-                    type="button"
-                    className="close btn btn-light"
-                    data-dismiss="modal"
-                    onClick={toggleLoginPopup}
-                  >
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div className="modal-body">
-                  <Login />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Login toggleLoginPopup={toggleLoginPopup} />
       )}
     </>
   );

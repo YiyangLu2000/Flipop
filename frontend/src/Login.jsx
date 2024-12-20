@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import './Login.css';
 
-function Login() {
+function Login({ toggleLoginPopup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Handle Login
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     console.log("Logging in with:", email, password);
@@ -40,28 +39,41 @@ function Login() {
   };
 
   return (
-    <div className="login-form container-fluid d-flex flex-column justify-content-center align-items-center min-vh-100">
-      <form onSubmit={handleLoginSubmit} className="w-100">
-        <div className="mb-3 text-center">
-          <h2 className="modal-title text-center">Log in or Create an account</h2>
+    <div className="modal modal-lg d-block modal-background" tabIndex="-1" role="dialog">
+      <div className="modal-dialog modal-dialog-centered" role="document">
+        <div className="modal-content">
+          <div className="d-flex justify-content-end mb-5">
+            <button
+              type="button"
+              className="btn-close p-4"
+              aria-label="Close"
+              onClick={toggleLoginPopup}
+            ></button>
+          </div>
+          <div className="mt-4 mb-3 text-center">
+            <h2 className="modal-title text-center">Log in or Create an account</h2>
+          </div>
+          <div className="modal-body mb-5">
+            <form onSubmit={handleLoginSubmit}>
+              <div className="mb-3 w-50 mx-auto">
+                <label htmlFor="email" className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {errorMessage && <div className="text-danger mb-3">{errorMessage}</div>}
+              <div className="mt-4 mb-5 w-50 mx-auto">
+                <button type="submit" className="btn btn-dark mb-5 w-100">Log In</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div className="mb-3 text-center w-50 mx-auto">
-          <label>Email</label>
-          <input
-            type="email"
-            className="form-control text-center"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        {errorMessage && <div className="text-danger">{errorMessage}</div>}
-        <div className="text-center">
-          <button type="submit" className="btn btn-dark px-5 w-50 mx-auto">
-            Continue
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }
