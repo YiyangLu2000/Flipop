@@ -42,16 +42,26 @@ async function connectToDatabase() {
 
 connectToDatabase();
 
+app.post('/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const existingUser = await userInfo.findOne({ email });
+
+        console.log("existingUser", existingUser);
+
+        res.status(200).json({ exist: !!existingUser });
+
+    } catch (error) {
+        console.error('Error during email check:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Register User
 app.post('/register', async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // Check if user already exists
-        const existingUser = await userInfo.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email already registered' });
-        }
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);

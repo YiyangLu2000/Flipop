@@ -5,3 +5,15 @@
 .modal-background {
     background-color: rgba(255, 255, 255, 0.8);
 }
+
+.custom-rounded-modal {
+    --bs-modal-border-radius: 2rem;
+}
+
+.custom-rounded-cell {
+    --bs-border-radius: 0.8rem;
+}
+
+.custom-bullet-fs {
+    font-size: 12px;
+}
