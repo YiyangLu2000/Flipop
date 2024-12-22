@@ -17,3 +17,7 @@
 .custom-bullet-fs {
     font-size: 12px;
 }
+
+.is-invalid {
+    background-image: none !important;
+}

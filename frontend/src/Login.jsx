@@ -4,8 +4,15 @@ import './Login.css';
 function Login({ toggleLoginPopup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const initialPasswordRules = [
+    { rule: "A minimum length of 8 characters.", isValid: false },
+    { rule: "At least one number.", isValid: false },
+    { rule: "At least one letter.", isValid: false },
+  ];
+  const [passwordErrors, setPasswordErrors] = useState(initialPasswordRules);
   const [isRegistered, setIsRegistered] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showValidation, setShowValidation] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -32,30 +39,56 @@ function Login({ toggleLoginPopup }) {
     }
   };
 
+  const validatePassword = (password) => {
+    const rules = [
+      { rule: "A minimum length of 8 characters.", isValid: password.length >= 8 },
+      { rule: "At least one number.", isValid: /\d/.test(password) },
+      { rule: "At least one letter.", isValid: /[a-zA-Z]/.test(password) },
+    ];
+    return rules;
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordErrors(validatePassword(newPassword));
+  };
+
+  const sortedErrors = [...passwordErrors].sort((a, b) => a.isValid - b.isValid);
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const endpoint = isRegistered ? "login" : "register";
-      const response = await fetch(`http://localhost:8080/${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const updatedErrors = validatePassword(password);
+    setPasswordErrors(updatedErrors);
+    setShowValidation(true); // Highlight unsatisfied rules
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log("errorData.message", errorData.message);
-        setErrorMessage(errorData.message);
-        throw new Error(errorData.message || "Failed to process request");
+    // Check if all rules are satisfied
+    if (updatedErrors.every((error) => error.isValid)) {
+      console.log("Password valid, sending to backend...");
+      try {
+        const endpoint = isRegistered ? "login" : "register";
+        const response = await fetch(`http://localhost:8080/${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          setErrorMessage(errorData.message);
+          throw new Error(errorData.message || "Failed to process request");
+        }
+  
+        const data = await response.json();
+        console.log(`${isRegistered ? "Login" : "Register"} successful`, data);
+        // Handle success (e.g., redirect, store token, etc.)
+      } catch (error) {
+        console.error(error);
       }
-
-      const data = await response.json();
-      console.log(`${isRegistered ? "Login" : "Register"} successful`, data);
-      // Handle success (e.g., redirect, store token, etc.)
-    } catch (error) {
-      console.error(error);
+    } else {
+      console.log("Password invalid, fix errors before submitting.");
     }
   };
 
@@ -90,7 +123,7 @@ function Login({ toggleLoginPopup }) {
           </div>
 
           <div className="modal-body mb-5">
-            <form onSubmit={isRegistered === null ? handleEmailSubmit : handleFormSubmit}>
+            <form onSubmit={isRegistered === null ? handleEmailSubmit : handleFormSubmit} noValidate>
               <div className="mb-3 w-50 mx-auto">
                 {isRegistered === null && (
                   <>
@@ -110,19 +143,22 @@ function Login({ toggleLoginPopup }) {
                     <label htmlFor="password" className="form-label">Password</label>
                     <input
                       type="password"
-                      className="form-control custom-rounded-cell"
+                      className={`form-control custom-rounded-cell ${showValidation && passwordErrors.some((error) => !error.isValid) ? "is-invalid" : ""}`}
                       id="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={handlePasswordChange}
                       required
                     />
-                      {!isRegistered
-                        && <ul className="custom-bullet-fs text-secondary">
-                        <li>A minimal length of 8 characters.</li>
-                        <li>At least one number.</li>
-                        <li>At least one letter.</li>
-                      </ul>
-                      }
+                    <ul className="custom-bullet-fs mt-2">
+                      {sortedErrors.map((error, index) => (
+                        <li
+                          key={index}
+                          className={`${error.isValid ? "text-success" : "text-secondary"} ${!error.isValid && showValidation ? "text-danger" : ""}`}
+                        >
+                          {error.rule}
+                        </li>
+                      ))}
+                    </ul>
                   </>
                 )}
 
