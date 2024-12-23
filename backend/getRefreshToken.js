@@ -10,7 +10,7 @@ const oAuth2Client = new google.auth.OAuth2(
 // Generate an authentication URL
 const authUrl = oAuth2Client.generateAuthUrl({
   access_type: 'offline', // To get the refresh token
-  scope: ['https://www.googleapis.com/auth/gmail.send'],
+  scope: ['https://mail.google.com'],
 });
 
 console.log('Authorize this app by visiting this url:', authUrl);
@@ -18,7 +18,7 @@ console.log('Authorize this app by visiting this url:', authUrl);
 // After you visit the URL, Google will redirect you to your REDIRECT_URI with a code in the query string
 // Copy that code here:
 
-const code = '4/0AanRRrvnfPRNianUNhTBj9HoSIuprZp7BKpuDhy-olTZHELpiXrt077qi0-KR1nqkbEBqA'; // Paste the code you get after authentication
+const code = '4/0AanRRrt0u8J2AbEQmllWPhfsh3qi5uhpUhac4qYmWkwqDuj8RzbGrTJmaBc1bWrfZcQ3aA'; // Paste the code you get after authentication
 
 async function getTokens() {
   try {
