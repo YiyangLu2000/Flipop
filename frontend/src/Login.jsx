@@ -3,6 +3,8 @@ import './Login.css';
 
 function Login({ toggleLoginPopup }) {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const [password, setPassword] = useState("");
   const initialPasswordRules = [
     { rule: "A minimum length of 8 characters.", isValid: false },
@@ -12,16 +14,23 @@ function Login({ toggleLoginPopup }) {
   const [passwordErrors, setPasswordErrors] = useState(initialPasswordRules);
   const [isRegistered, setIsRegistered] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [showValidation, setShowValidation] = useState(false);
+  const [showEmailValidation, setShowEmailValidation] = useState(false);
+  const [showPasswordValidation, setShowPasswordValidation] = useState(false);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
+    setShowEmailValidation(true);
+
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    setEmailError("");
     try {
       const response = await fetch("http://localhost:8080/check-email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
@@ -32,10 +41,40 @@ function Login({ toggleLoginPopup }) {
       }
 
       const data = await response.json();
-      setIsRegistered(data.exist);
+
+      if (data.exist) {
+        // If email exists, proceed to password input
+        setIsRegistered(true);
+      } else {
+        // If email is new, send verification email
+        await handleEmailVarification();
+        alert("We have sent a link to your email. Please check and verify.");
+      }
       setErrorMessage("");
     } catch (error) {
       console.error(error);
+      setErrorMessage("Error checking email.");
+    }
+  };
+
+  const handleEmailVarification = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(errorData.message);
+        throw new Error(errorData.message || "Failed to send verification email");
+      }
+
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Failed to send verification email.");
     }
   };
 
@@ -60,7 +99,7 @@ function Login({ toggleLoginPopup }) {
     e.preventDefault();
     const updatedErrors = validatePassword(password);
     setPasswordErrors(updatedErrors);
-    setShowValidation(true); // Highlight unsatisfied rules
+    setShowPasswordValidation(true); // Highlight unsatisfied rules
 
     // Check if all rules are satisfied
     if (updatedErrors.every((error) => error.isValid)) {
@@ -74,13 +113,13 @@ function Login({ toggleLoginPopup }) {
           },
           body: JSON.stringify({ email, password }),
         });
-  
+
         if (!response.ok) {
           const errorData = await response.json();
           setErrorMessage(errorData.message);
           throw new Error(errorData.message || "Failed to process request");
         }
-  
+
         const data = await response.json();
         console.log(`${isRegistered ? "Login" : "Register"} successful`, data);
         // Handle success (e.g., redirect, store token, etc.)
@@ -123,58 +162,78 @@ function Login({ toggleLoginPopup }) {
           </div>
 
           <div className="modal-body mb-5">
-            <form onSubmit={isRegistered === null ? handleEmailSubmit : handleFormSubmit} noValidate>
-              <div className="mb-3 w-50 mx-auto">
-                {isRegistered === null && (
-                  <>
-                    <label htmlFor="email" className="form-label">Email</label>
-                    <input
-                      type="email"
-                      className="form-control custom-rounded-cell"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </>
-                )}
-                {(isRegistered === true || isRegistered === false) && (
-                  <>
-                    <label htmlFor="password" className="form-label">Password</label>
-                    <input
-                      type="password"
-                      className={`form-control custom-rounded-cell ${showValidation && passwordErrors.some((error) => !error.isValid) ? "is-invalid" : ""}`}
-                      id="password"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                    <ul className="custom-bullet-fs mt-2">
-                      {sortedErrors.map((error, index) => (
-                        <li
-                          key={index}
-                          className={`${error.isValid ? "text-success" : "text-secondary"} ${!error.isValid && showValidation ? "text-danger" : ""}`}
-                        >
-                          {error.rule}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
+            {isRegistered === null && !emailError && (
+              <form onSubmit={handleEmailVarification} noValidate>
+                <div className="mb-3 w-50 mx-auto">
+                  <label htmlFor="email" className="form-label">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    className={`form-control ${showEmailValidation && emailError ? "is-invalid" : ""}`}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  {showEmailValidation && emailError && (
+                    <div className="invalid-feedback">{emailError}</div>
+                  )}
+                </div>
 
                 {errorMessage && <div className="text-danger mt-2">{errorMessage}</div>}
-              </div>
 
-              <div className="mt-4 mb-5 w-50 mx-auto">
-                <button type="submit" className="btn btn-dark mb-5 w-100 custom-rounded-cell">
-                  Continue
-                </button>
+                <div className="mt-4 mb-5 w-50 mx-auto">
+                  <button type="submit" className="btn btn-dark mb-5 w-100 custom-rounded-cell">
+                    Send Verification Link
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {isRegistered === null && !errorMessage && emailError === "" && (
+              <div className="text-center">
+                <p className="text-success">
+                  We have sent a verification link to your email. Please check your inbox and click the link to continue.
+                </p>
               </div>
-            </form>
+            )}
+
+            {(isRegistered === true || isRegistered === false) && (
+              <form onSubmit={handleFormSubmit} noValidate>
+                <div className="mb-3 w-50 mx-auto">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className={`form-control custom-rounded-cell ${showPasswordValidation && passwordErrors.some((error) => !error.isValid) ? "is-invalid" : ""}`}
+                    id="password"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    required
+                  />
+                  <ul className="custom-bullet-fs mt-2">
+                    {sortedErrors.map((error, index) => (
+                      <li
+                        key={index}
+                        className={`${error.isValid ? "text-success" : "text-secondary"} ${!error.isValid && showPasswordValidation ? "text-danger" : ""}`}
+                      >
+                        {error.rule}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {errorMessage && <div className="text-danger mt-2">{errorMessage}</div>}
+                </div>
+
+                <div className="mt-4 mb-5 w-50 mx-auto">
+                  <button type="submit" className="btn btn-dark mb-5 w-100 custom-rounded-cell">
+                    Continue
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
     </div>
+
   );
 }
 
