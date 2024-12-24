@@ -161,14 +161,11 @@ app.post('/login', async (req, res) => {
 
         // Find the user in the database
         const user = await userInfo.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
 
         // Compare the password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            return res.status(400).json({ message: 'Wrong password' });
         }
 
         // Generate a JWT token
